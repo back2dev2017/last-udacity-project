@@ -34,7 +34,7 @@
   /* overflow-y: scroll; */
 }
 #datalistarea {
-  max-height: 90%;
+  max-height: 98%;
   display: flex;
   flex-direction: column;
   background-color: lightgrey;
@@ -43,6 +43,7 @@
   font-weight: bold;
   text-align: left;
   padding: 5px;
+  background-image: linear-gradient(to right, rgb(164,164,164), rgb(230,230,230), rgb(164,164,164))
 
   /* background:none!important;
   margin: 0;
@@ -59,20 +60,31 @@
   padding: 0;
   font-size: 0.8em;
 }
+.myinfohead {
+  padding: 7px;
+  margin: 0;
+  background-image: linear-gradient(to right, white, rgb(194,194,255), white)
+}
+.myinfobody {
+  margin: 4px;
+}
 #srchdiv {
-  background-color: grey;
+  /* color: #ff4422 */
+  border: 1px solid rgb(112,112,112);
+  background-color: rgb(128,128,128);
   color: white;
   font-size: 1.1em;
   padding: 4px;
   clear: both;
 }
 #srchitems {
-  border: 1px solid grey;
-  max-height: 90%;
+  /* border: 1px solid grey; */
+  /* max-height: 90%; */
+  background-color: rgb(230,230,230);
   overflow-y: scroll;
 }
 .srchitemdetail {
-  margin: 4px;
+  margin: 10px;
   /* border: 1px solid blue */
 }
 #maparea {
@@ -83,6 +95,14 @@
 #mapg {
   width: 100%;
   height: 98%;
+}
+
+#btn-maprecenter {
+  font-size: 1.2em;
+  border-radius: 10px;
+  margin-left: 10px;
+  padding: 2px 8px 2px 8px;
+  background-image: radial-gradient(circle, white, rgb(204, 204, 44))
 }
 
 @keyframes App-logo-spin {

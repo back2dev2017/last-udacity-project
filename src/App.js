@@ -13,7 +13,10 @@ class App extends Component {
     gmapref: {},
     showbiginfo: true,
     showlocdetail: {},
-    srchstr: ""
+    srchstr: "",
+    mymapinitcenter: {lat: 38.625017, lng: -90.184780},
+    emphicon: {},
+    usualicon: {}
   }
 
   componentDidMount() {
@@ -33,11 +36,12 @@ class App extends Component {
   }
 
   getplacesinfo = () => {
+    let llstr = this.state.mymapinitcenter.lat.toString() + ', ' + this.state.mymapinitcenter.lng.toString()
     const endPoint = "https://api.foursquare.com/v2/venues/explore?"
     const parms = {
       client_id: "DRSZ2WAPQPYD5SBZOU43N3OLG0YT0SNYYSX4YJ14IOQO2MVU",
       client_secret: "GQTA3AB3UV5151GSQ3HK4QXD2CADS3OF0AO3QBP4BHFO2O55",
-      ll: "38.625017,-90.184780",
+      ll: llstr,
       radius: "3000",
       v: "20182507"
     }
@@ -45,8 +49,13 @@ class App extends Component {
     axios.get(endPoint + fsparms)
       .then(response => {
         // to get data in a usable form, pull out the "real" data of the array
+        let tmpdata = response.data.response.groups[0].items
+        tmpdata.sort((a, b) => {
+          return (a.venue.name > b.venue.name) ? 1 : ((b.venue.name > a.venue.name ? -1 : 0))
+        })
+        // console.log(tmpdata)
         this.setState({
-          myFSdata: response.data.response.groups[0].items
+          myFSdata: tmpdata
         }, this.myloadmap())
         this.setState({
           mylistdata: this.state.myFSdata,
@@ -55,7 +64,7 @@ class App extends Component {
         // console.log(this.state.myFSdata)
       })
       .catch(errinfo => {
-        console.log('Error - Udacity is the error - ' + errinfo)
+        console.log('Error in pulling data from FourSquare - ' + errinfo)
         this.setState({
           myFSdata: [],
           myshowdata: [],
@@ -67,26 +76,39 @@ class App extends Component {
 
   initMap = () => {
     let tmpmarkers = []
+    // var map = new window.google.maps.Map(document.getElementById('mapg'), {
+    //   center: {lat: 38.625017, lng: -90.184780},
+    //   zoom: 15
+    // })
     var map = new window.google.maps.Map(document.getElementById('mapg'), {
-      center: {lat: 38.625017, lng: -90.184780},
+      center: this.state.mymapinitcenter,
       zoom: 15
     })
-
+    var heyicon = makeMarkerIcon('FFFF00')
+    var deficon = makeMarkerIcon('ff4422')
     var infowindow = new window.google.maps.InfoWindow()
     this.state.myFSdata.map(mydataitem => {
-      var popupinfo = `<div id="infowin"><h3>${mydataitem.venue.name}</h3>` + 
-                      `<p>Category: ${mydataitem.venue.categories[0].name}</p>` +
-                      `<p> ${mydataitem.venue.location.formattedAddress}` + 
+      var popupinfo = `<div id="infowin"><h3 class='myinfohead'>${mydataitem.venue.name}</h3>` + 
+                      '<hr/>' + 
+                      `<p class='myinfobody'>Category: ${mydataitem.venue.categories[0].name}</p>` +
+                      `<p class='myinfobody'>${mydataitem.venue.location.formattedAddress}</p>` + 
                       `</div>`
       var marker = new window.google.maps.Marker({
         position: {lat: mydataitem.venue.location.lat, lng: mydataitem.venue.location.lng},
         map: map,
-        title: mydataitem.venue.name
+        title: mydataitem.venue.name,
+        icon: deficon
       })
       marker.addListener('click', function() {
         infowindow.setContent(popupinfo)
         infowindow.open(map,marker)
         // window.App.mymarkerclick()
+      })
+      marker.addListener('mouseover', function() {
+        this.setIcon(heyicon);
+      });
+      marker.addListener('mouseout', function() {
+        this.setIcon(deficon);
       })
       // add a prop to each marker to link it to the FourSquare data - aka the id value from FS
       marker.FSid = mydataitem.venue.id
@@ -95,7 +117,9 @@ class App extends Component {
     })
     this.setState({
       mymarkers: tmpmarkers,
-      gmapref: map
+      gmapref: map,
+      emphicon: heyicon,
+      usualicon: deficon
     })
   }
 
@@ -124,7 +148,6 @@ class App extends Component {
   }
 
   mysitepick = evt => {
-    // let tmpbtnid = evt.target.id
     let tmpbtnid = evt.target.getAttribute('data-fsid')
     let tmpmarkers = this.state.mymarkers
     // console.log(tmpmarkers)
@@ -143,10 +166,25 @@ class App extends Component {
       <div className="App">
         <main className = "onscreen">
           <div id="listing">
-            <DataList mymsg={this.state.fomsg} showitems={this.state.myshowdata} srchval={this.state.srchstr} mysrchfunc={this.mysrchplace} listclick={this.mysitepick}/>
+            <DataList 
+              mymsg={this.state.fomsg} 
+              showitems={this.state.myshowdata} 
+              srchval={this.state.srchstr} 
+              mysrchfunc={this.mysrchplace} 
+              listclick={this.mysitepick}
+              itemhover={this.mysiteover}
+              mapmarkers={this.state.mymarkers}
+              iconsee={this.state.emphicon}
+              icondef={this.state.usualicon}
+              origcenter={this.state.mymapinitcenter}
+              mapref={this.state.gmapref}
+            />
           </div>
           <div id="maparea">
-            <Map markers={this.state.mymarkers} showitems={this.state.myshowdata} mapref={this.state.gmapref}/>
+            <Map 
+              markers={this.state.mymarkers} 
+              showitems={this.state.myshowdata} 
+              mapref={this.state.gmapref}/>
           </div>
         </main>
 
@@ -155,6 +193,15 @@ class App extends Component {
   }
 }
 
+function makeMarkerIcon(mycolor) {
+  let newimage = new window.google.maps.MarkerImage(
+    'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ mycolor + '|40|_|%E2%80%A2',
+    new window.google.maps.Size(21,34),
+    new window.google.maps.Point(0,0),
+    new window.google.maps.Point(10,34),
+    new window.google.maps.Size(21,34));
+    return newimage;
+}
 function myloadscript(url) {
   // where is the first "script" tag
   // console.log(url);
