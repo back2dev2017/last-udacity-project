@@ -30,9 +30,14 @@ class App extends Component {
   }
 
   myloadmap = () => {
-    // console.log("I would have tried to load the map now")
+    // swap the commenting of the myloadscript calls below to see the error handling for a 'bad script' run. Note that it
+    // may take 20-40 secs for the script to 'fail'
     myloadscript("https://maps.googleapis.com/maps/api/js?v=3&libraries=geometry&key=AIzaSyBHl4UjPFrXK9rY-PDvL6h3GBNocxkOHz8&callback=initMap")
+    // myloadscript("https://maps.gooxxcxxapis.com/maps/api/js?v=3&libraries=geometry&key=AIzaSyBHl4UjPFrXK9rY-PDvL6h3GBNocxkOHz8&callback=initMap")
+
+    // swap the commenting out of the following 2 lines to test some error notifications to users
     window.initMap = this.initMap
+    // this.initMap()
   }
 
   getplacesinfo = () => {
@@ -65,6 +70,8 @@ class App extends Component {
       })
       .catch(errinfo => {
         console.log('Error in pulling data from FourSquare - ' + errinfo)
+        alert('Error in pulling data from FourSquare. The application will likely be unusable. We apologize for the inconvenience')
+        window.document.getElementById('mapsectionmsg').textContent = "Application has crashed. Please notify the site owner/contact."
         this.setState({
           myFSdata: [],
           myshowdata: [],
@@ -76,10 +83,8 @@ class App extends Component {
 
   initMap = () => {
     let tmpmarkers = []
-    // var map = new window.google.maps.Map(document.getElementById('mapg'), {
-    //   center: {lat: 38.625017, lng: -90.184780},
-    //   zoom: 15
-    // })
+    // note the use of a state variable to determine "map center" - this gives a simple path to allow users
+    // users to enter/select a different center point, and then generate things from there (future enhancement)
     var map = new window.google.maps.Map(document.getElementById('mapg'), {
       center: this.state.mymapinitcenter,
       zoom: 15
@@ -180,6 +185,7 @@ class App extends Component {
               mapref={this.state.gmapref}
             />
           </div>
+
           <div id="maparea">
             <Map 
               markers={this.state.mymarkers} 
@@ -210,6 +216,17 @@ function myloadscript(url) {
   newscript.src = url;
   newscript.async = true;
   newscript.defer = true;
+  newscript.onerror = function () {
+    console.log('Script error attempting: ' + url);
+    window.document.getElementById('mapsectionmsg').textContent = "Script loading error, map will be unavailable."
+    alert('An error occurred when trying to load our Google Maps script. We apologize for the inconvenience.');
+  };
   locplace.parentNode.insertBefore(newscript, locplace);
+
+}
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+  alert('It appears a system error has occurred and the map will not be available.' + 
+        'Functionality will probably be impared or halted. We apologize for the inconvenience')
+  return false
 }
 export default App;

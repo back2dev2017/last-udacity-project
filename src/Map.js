@@ -23,7 +23,7 @@ class Map extends Component {
 
     return(
       <div id='mapg'>
-        <h2>Please be patient, map is loading</h2>
+        <h2 id='mapsectionmsg'>Please be patient, map is loading</h2>
       </div>
     );
   }
